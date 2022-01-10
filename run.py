@@ -1,11 +1,10 @@
 import logging
-import pickle
 from datetime import datetime
 
-from ensembles.RandomForest import RandomForest
 from decision_trees.DecisionTree import DecisionTree
+from ensembles.RandomForest import RandomForest
 from pipeline.Pipeline import Pipeline
-from utils.metrics import evaluate
+from utils.cross_validation import cross_validation
 
 logging.basicConfig()
 logger = logging.getLogger(__name__)
@@ -27,15 +26,24 @@ class ConsoleUI:
         print("Before training, choose hyperparams. ")
         n_estimators = int(input('n_estimators='))
         max_depth = int(input('max_depth='))
+        k_cross_validation = int(input('(0->no, k->k-fold cross validation)='))
 
         X_train, X_test, y_train, y_test = Pipeline().run_all_preliminary_steps(input_file)
         rf = RandomForest(n_estimators=n_estimators, max_depth=max_depth)
+        model_name = 'rf_' + datetime.now().strftime("%d.%m.%Y_%H.%M.%S")
 
-        rf.fit(X_train, y_train)
+        if k_cross_validation == 0:
+            rf.fit(X_train, y_train)
+        else:
+            rfs, confidence_performances = cross_validation(rf, X_train, y_train, cv=k_cross_validation)
+            rf = rfs[0]
+            logger.info(confidence_performances)
+            filename_performances = model_name + '_confidence_performances_' + str(k_cross_validation) + '.txt'
+            with open(filename_performances, 'w') as writer:
+                writer.write(str(confidence_performances))
 
         y_pred = rf.predict(X_test)
 
-        model_name = 'rf_' + datetime.now().strftime("%d.%m.%Y_%H.%M.%S")
         logger.info(f'Performance model={model_name} is acc={rf.score(X_test, y_test)} and '
                     f'time={rf.training_time}')
 
