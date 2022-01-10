@@ -1,13 +1,13 @@
 import logging
-import random
 import math
+import random
+import time
 from multiprocessing import Process, Manager
 
 import numpy as np
-from decision_trees.DecisionTree import DecisionTree
 from sklearn.tree import DecisionTreeClassifier
 
-from utils.metrics import accuracy
+from utils.metrics import compute_accuracy, evaluate
 
 logging.basicConfig()
 logger = logging.getLogger(__name__)
@@ -15,8 +15,8 @@ logger.setLevel(logging.INFO)
 
 
 class RandomForest:
-    def __init__(self, n_estimators=100, criterion='entropy', splitter='best', max_depth=None, min_samples_split=3,
-                 min_samples_leaf=1, n_jobs=None):
+    def __init__(self, n_estimators=2, criterion='entropy', splitter='best', max_depth=15, min_samples_split=3,
+                 min_samples_leaf=1, n_jobs=4):
         self.__n_estimators = n_estimators
         self.__criterion = criterion
         self.__splitter = splitter
@@ -27,8 +27,10 @@ class RandomForest:
         self.__estimators_features = [None] * n_estimators
         self.__estimators = [None] * n_estimators
         self.__n_jobs = 4 if n_jobs == -1 else n_jobs
+        self.training_time = 0
 
     def fit(self, X, y):
+        start = time.time()
         self.__no_classes = len(np.unique(y))
 
         if self.__n_jobs is None:
@@ -56,6 +58,8 @@ class RandomForest:
             self.__estimators_features = estimators_features
 
         logger.info('DONE training')
+        end = time.time()
+        self.training_time = end - start
 
     def train_estimator(self, estimator_indexes, X, y, estimators, estimators_features, process=0):
         logger.info(f'start training process={process} with indexes={estimator_indexes}')
@@ -73,6 +77,15 @@ class RandomForest:
 
         logger.info(f'finish training process={process}')
 
+    def analysis(self, y_true, y_pred):
+        performances = evaluate(y_true=y_true, y_pred=y_pred)
+        performances['n_estimators'] = self.__n_estimators
+        performances['max_depth'] = self.__max_depth
+        performances['n_jobs'] = self.__n_jobs
+        performances['criterion'] = self.__criterion
+        performances['training_time'] = self.training_time
+        return performances
+
     def predict(self, X):
         no_samples = len(X)
         rf_predictions = np.zeros((no_samples, self.__no_classes))
@@ -87,7 +100,7 @@ class RandomForest:
 
     def score(self, X, y):
         y_pred = self.predict(X)
-        return accuracy(y_pred=y_pred, y_true=y)
+        return compute_accuracy(y_pred=y_pred, y_true=y)
 
     def __bootstrapping(self, X, y):
         bootstrapped_rows = np.random.choice(len(X), size=len(X), replace=True)
@@ -99,6 +112,7 @@ class RandomForest:
         subset_of_features = np.random.choice(len_features, size=len_subset_features, replace=False)
         Xsubset = X[:, subset_of_features]
         return Xsubset, subset_of_features
+
 
 # for idx_estimator in range(self.__n_estimators):
         #     Xb, yb = self.__bootstrapping(X, y)

@@ -1,9 +1,10 @@
 import logging
 import math
+import time
 
 import numpy as np
 
-from utils.metrics import accuracy
+from utils.metrics import compute_accuracy, evaluate
 
 logging.basicConfig()
 logger = logging.getLogger(__name__)
@@ -15,22 +16,25 @@ class Node:
 
 
 class DecisionTree:
-    def __init__(self, criterion='entropy', splitter='best', max_depth=15, min_samples_split=2, min_samples_leaf=1,
-                 max_thresholds=10, n_jobs=-1):
+    def __init__(self, criterion='entropy', splitter='best', max_depth=5, min_samples_split=2, min_samples_leaf=1,
+                 max_thresholds=10):
         self.__criterion = criterion
         self.__splitter = splitter
         self.__max_depth = max_depth
         self.__min_samples_split = min_samples_split
         self.__min_samples_leaf = min_samples_leaf
         self.__max_thresholds = max_thresholds
-        self.__n_jobs = 4 if n_jobs == -1 else n_jobs
+        self.training_time = 0
         self.__root = None
 
     def fit(self, X, y):
+        start = time.time()
         self.__no_classes = len(np.unique(y))
         self.__classes = np.unique(y)
         self.__root = self.__build_decision_tree(X, y, curr_depth=0, max_depth=self.__max_depth)
         logger.info('DONE training')
+        end = time.time()
+        self.training_time = end - start
 
     def predict(self, X):
         predictions = []
@@ -45,9 +49,17 @@ class DecisionTree:
             return self.__predict_sample(x, node.true_branch)
         return self.__predict_sample(x, node.false_branch)
 
-    def score(self, X, y, metric='acc'):
+    def score(self, X, y):
         y_pred = self.predict(X)
-        return accuracy(y_pred=y_pred, y_true=y)
+        return compute_accuracy(y_pred=y_pred, y_true=y)
+
+    def analysis(self, y_true, y_pred):
+        performances = evaluate(y_true=y_true, y_pred=y_pred)
+        performances['max_depth'] = self.__max_depth
+        performances['criterion'] = self.__criterion
+        performances['training_time'] = self.training_time
+        performances['max_thresholds'] = self.__max_thresholds
+        return performances
 
     def __build_decision_tree(self, X, y, curr_depth, max_depth):
         curr_information_gain, question = self.__find_best_split(X, y)
