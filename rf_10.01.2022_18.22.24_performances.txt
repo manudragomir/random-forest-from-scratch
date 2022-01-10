@@ -1,0 +1,1 @@
+{'accuracy': 0.9257797078562969, 'precision': 0.9329314722510839, 'recall': 0.9111412427718698, 'f1': 0.92190761689922, 'n_estimators': 500, 'max_depth': 15, 'n_jobs': 4, 'criterion': 'entropy', 'training_time': 204.52123832702637}
