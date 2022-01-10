@@ -6,6 +6,7 @@ from multiprocessing import Process, Manager
 
 import numpy as np
 from sklearn.tree import DecisionTreeClassifier
+from decision_trees.DecisionTree import DecisionTree
 
 from utils.metrics import compute_accuracy, evaluate
 

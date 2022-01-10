@@ -1,0 +1,1 @@
+{'accuracy_mean': 0.6580779445911129, 'accuracy_confidence': 0.02827898038048031, 'precision_mean': 0.682292239933599, 'precision_confidence': 0.02787056351078118, 'recall_mean': 0.6389203886554284, 'recall_confidence': 0.026590326740412985, 'f1_mean': 0.659800548356875, 'f1_confidence': 0.026039798224927243}
