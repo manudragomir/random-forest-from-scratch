@@ -67,7 +67,8 @@ class RandomForest:
         for estimator_index in estimator_indexes:
             Xb, yb = self.__bootstrapping(X, y)
             Xbs, subset_of_features = self.__select_subset_of_features(Xb)
-            new_estimator = DecisionTree(criterion=self.__criterion,
+            new_estimator = DecisionTree(
+                                         criterion=self.__criterion,
                                          splitter=self.__splitter,
                                          max_depth=self.__max_depth,
                                          min_samples_split=self.__min_samples_split,
@@ -113,16 +114,3 @@ class RandomForest:
         subset_of_features = np.random.choice(len_features, size=len_subset_features, replace=False)
         Xsubset = X[:, subset_of_features]
         return Xsubset, subset_of_features
-
-
-# for idx_estimator in range(self.__n_estimators):
-        #     Xb, yb = self.__bootstrapping(X, y)
-        #     Xbs, subset_of_features = self.__select_subset_of_features(Xb)
-        #     new_estimator = DecisionTreeClassifier(criterion=self.__criterion,
-        #                                            splitter=self.__splitter,
-        #                                            max_depth=self.__max_depth,
-        #                                            min_samples_split=self.__min_samples_split,
-        #                                            min_samples_leaf=self.__min_samples_leaf)
-        #     new_estimator.fit(Xbs, yb)
-        #     self.__estimators[idx_estimator] = new_estimator
-        #     self.__estimators_features[idx_estimator] = subset_of_features
